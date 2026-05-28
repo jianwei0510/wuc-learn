@@ -7,6 +7,7 @@ import {
 } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SyncClerkUser } from "./SyncClerkUser";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <ClerkProvider>
+          <SyncClerkUser />
           <Navbar />
           <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
           <footer className="mt-20 border-t border-black/5">

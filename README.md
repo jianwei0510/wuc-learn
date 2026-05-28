@@ -15,11 +15,12 @@ This project is used as a teaching app for adding authentication and payment to 
    - Add Clerk to the Next.js App Router app.
    - Add visible sign-in, sign-up, and user profile controls.
    - Connect app UI to the authenticated user state.
+   - Store signed-in Clerk user data in a local SQLite database.
    - Keep payment disabled for this step.
 
 3. Add payment
    - This is the next training step.
-   - The authenticated user state should already be available before checkout is added.
+   - The authenticated user state and user database should already be available before checkout is added.
 
 ## Where the Clerk Setup Prompt Comes From
 
