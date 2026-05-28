@@ -32,23 +32,26 @@ export async function GET(request: Request) {
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.retrieve(sessionId);
   const expectedAmount = Math.round(course.price * 100);
-  const expectedClientReferenceId = `${user.clerk_id}:${course.slug}`;
+  const expectedPaymentLinkClientReferenceId = `${user.clerk_id}:${course.slug}`;
   const configuredPaymentLink = getPaymentLinkForCourse(course.slug);
   const configuredPaymentLinkId = configuredPaymentLink
-    ? configuredPaymentLink.split("/").at(-1)
+    ? new URL(configuredPaymentLink).pathname.split("/").at(-1)
     : null;
   const customerEmail =
     session.customer_details?.email || session.customer_email || null;
+  const customerEmailMatches =
+    customerEmail?.toLowerCase() === user.email?.toLowerCase();
   const paymentIntentId =
     typeof session.payment_intent === "string" ? session.payment_intent : null;
   const sessionPaymentLink =
     typeof session.payment_link === "string" ? session.payment_link : null;
   const matchesDynamicCheckoutSession =
-    session.client_reference_id === expectedClientReferenceId;
+    session.client_reference_id === user.clerk_id &&
+    session.metadata?.courseSlug === course.slug;
   const matchesConfiguredPaymentLink =
-    session.metadata?.courseSlug === course.slug &&
     sessionPaymentLink === configuredPaymentLinkId &&
-    customerEmail === user.email;
+    (session.client_reference_id === expectedPaymentLinkClientReferenceId ||
+      customerEmailMatches);
 
   if (
     session.payment_status !== "paid" ||
