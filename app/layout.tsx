@@ -34,6 +34,13 @@ function Navbar() {
               Courses
             </Link>
           </li>
+          <Show when="signed-in">
+            <li>
+              <Link href="/my-courses" className="hover:text-emerald-700 transition-colors">
+                My courses
+              </Link>
+            </li>
+          </Show>
         </ul>
         <div className="flex items-center gap-3 text-sm">
           <Show when="signed-out">

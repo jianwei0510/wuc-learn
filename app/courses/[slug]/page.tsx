@@ -1,9 +1,11 @@
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { startCourseCheckout } from "@/app/checkout/actions";
+import { hasCourseAccess } from "@/lib/course-access";
 import { courses, getCourseBySlug } from "@/lib/courses";
+import { syncCurrentUser } from "@/lib/users";
 import { LockedVideo } from "./LockedVideo";
 
 export function generateStaticParams() {
@@ -12,20 +14,24 @@ export function generateStaticParams() {
 
 export default async function CoursePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ checkout?: string }>;
 }) {
   const { slug } = await params;
+  const checkout = (await searchParams)?.checkout;
   const course = getCourseBySlug(slug);
   if (!course) notFound();
-  const { userId } = await auth();
-  const user = userId ? await currentUser() : null;
+  const user = await syncCurrentUser();
   const displayName =
-    user?.firstName ||
+    user?.first_name ||
     user?.username ||
-    user?.primaryEmailAddress?.emailAddress ||
+    user?.email ||
     "student";
-  const isSignedIn = Boolean(userId);
+  const isSignedIn = Boolean(user);
+  const canAccessCourse = user ? hasCourseAccess(user.id, course.slug) : false;
+  const paymentsEnabled = Boolean(process.env.STRIPE_SECRET_KEY);
 
   return (
     <article className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-start">
@@ -44,7 +50,15 @@ export default async function CoursePage({
         </p>
 
         <div className="mt-8">
-          <LockedVideo isSignedIn={isSignedIn} price={course.price} />
+          <LockedVideo
+            courseSlug={course.slug}
+            isSignedIn={isSignedIn}
+            hasAccess={canAccessCourse}
+            paymentsEnabled={paymentsEnabled}
+            price={course.price}
+            videoUrl={course.videoUrl}
+            checkoutAction={startCourseCheckout}
+          />
         </div>
 
         <section className="mt-10">
@@ -66,7 +80,9 @@ export default async function CoursePage({
           </div>
           <div className="p-5">
             <div className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-              {isSignedIn ? (
+              {canAccessCourse ? (
+                "You already own this course."
+              ) : isSignedIn ? (
                 <>
                   Signed in as <span className="font-semibold">{displayName}</span>
                 </>
@@ -79,9 +95,28 @@ export default async function CoursePage({
               <span className="text-neutral-400 font-normal text-base"> USD</span>
             </div>
             <p className="mt-1 text-sm text-neutral-500">One-time purchase · Lifetime access</p>
-            {isSignedIn ? (
-              <button className="mt-4 w-full rounded-full bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800">
-                Purchase course
+            {canAccessCourse ? (
+              <a
+                href={course.videoUrl}
+                className="mt-4 block w-full rounded-full bg-emerald-700 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-emerald-800"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open course
+              </a>
+            ) : isSignedIn && paymentsEnabled ? (
+              <form action={startCourseCheckout}>
+                <input type="hidden" name="courseSlug" value={course.slug} />
+                <button className="mt-4 w-full rounded-full bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800">
+                  Purchase course
+                </button>
+              </form>
+            ) : isSignedIn ? (
+              <button
+                className="mt-4 w-full rounded-full bg-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-500"
+                disabled
+              >
+                Stripe setup required
               </button>
             ) : (
               <div className="mt-4 grid gap-2">
@@ -98,9 +133,21 @@ export default async function CoursePage({
               </div>
             )}
             <p className="mt-3 text-xs text-neutral-400 text-center">
-              {isSignedIn
-                ? "Checkout is not enabled in this auth-only training step."
-                : "Payment will be connected after authentication is working."}
+              {canAccessCourse
+                ? "Payment verified. Lifetime access is stored in the database."
+                : isSignedIn && !paymentsEnabled
+                ? "Add Stripe environment variables to enable checkout."
+                : checkout === "verified"
+                ? "Payment verified. Course access has been unlocked."
+                : checkout === "unverified"
+                ? "We could not verify that payment. Please contact the instructor."
+                : checkout === "cancelled"
+                ? "Checkout was cancelled. You can try again anytime."
+                : checkout === "success"
+                ? "Payment received. Verifying access now."
+                : isSignedIn
+                ? "Secure checkout is powered by Stripe."
+                : "Sign in before purchasing this course."}
             </p>
           </div>
         </div>

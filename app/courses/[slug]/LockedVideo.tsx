@@ -1,11 +1,24 @@
 import { SignInButton } from "@clerk/nextjs";
 
 type Props = {
+  courseSlug: string;
   isSignedIn: boolean;
+  hasAccess: boolean;
+  paymentsEnabled: boolean;
   price: number;
+  videoUrl: string;
+  checkoutAction: (formData: FormData) => Promise<void>;
 };
 
-export function LockedVideo({ isSignedIn, price }: Props) {
+export function LockedVideo({
+  courseSlug,
+  isSignedIn,
+  hasAccess,
+  paymentsEnabled,
+  price,
+  videoUrl,
+  checkoutAction,
+}: Props) {
   return (
     <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 text-white shadow-sm">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(16,185,129,0.35),transparent_32%),linear-gradient(135deg,rgba(20,184,166,0.16),transparent_42%)]" />
@@ -31,16 +44,37 @@ export function LockedVideo({ isSignedIn, price }: Props) {
             </svg>
           </div>
           <h2 className="mt-5 text-2xl font-semibold tracking-tight">
-            {isSignedIn ? "Purchase required" : "Sign in to continue"}
+            {hasAccess ? "Course unlocked" : isSignedIn ? "Purchase required" : "Sign in to continue"}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/70">
-            {isSignedIn
-              ? `You are signed in. Payment comes next, so this course stays locked until checkout is connected.`
+            {hasAccess
+              ? "Your payment is complete. You can now access this course video."
+              : isSignedIn
+              ? "You are signed in. Complete checkout to unlock this course video."
               : "Create an account or sign in before purchasing courses and accessing lesson videos."}
           </p>
-          {isSignedIn ? (
-            <button className="mt-6 rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-emerald-950 transition-colors hover:bg-emerald-400">
-              Purchase to unlock - ${price}
+          {hasAccess ? (
+            <a
+              href={videoUrl}
+              className="mt-6 inline-flex rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-emerald-950 transition-colors hover:bg-emerald-400"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open lesson video
+            </a>
+          ) : isSignedIn && paymentsEnabled ? (
+            <form action={checkoutAction}>
+              <input type="hidden" name="courseSlug" value={courseSlug} />
+              <button className="mt-6 rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-emerald-950 transition-colors hover:bg-emerald-400">
+                Purchase to unlock - ${price}
+              </button>
+            </form>
+          ) : isSignedIn ? (
+            <button
+              className="mt-6 rounded-full bg-white/15 px-5 py-2.5 text-sm font-semibold text-white/70"
+              disabled
+            >
+              Stripe setup required
             </button>
           ) : (
             <SignInButton mode="modal">
