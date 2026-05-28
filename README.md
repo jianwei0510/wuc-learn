@@ -1,54 +1,43 @@
-# WUC Learn Training Notes
+# WUC Learn 培訓筆記：Clerk 登入階段
 
-This project is used as a teaching app for adding authentication and payment to an existing Next.js application.
+這個分支是第 2 個進度：在原始課程平台上加入 Clerk 登入，並把使用者與課程資料存進本機 SQLite 資料庫。
 
-## Training Progress
+## 目前完成內容
 
-1. Original app
-   - No user login.
-   - No payment flow.
-   - Courses and locked video placeholders are static UI only.
+- 課程首頁與課程詳情頁已建立。
+- 課程資料已存進 SQLite 的 `courses` 資料表，頁面會從資料庫讀取課程。
+- 已加入 Clerk 登入、註冊與使用者選單。
+- 使用者登入後，基本資料會存進 `users` 資料表。
+- 課程頁會依照登入狀態顯示不同提示。
+- 付款尚未加入，會在下一個進度分支處理。
 
-2. Add user authentication with Clerk
-   - Install and authenticate with the Clerk CLI.
-   - Link the project to the correct Clerk application.
-   - Add Clerk to the Next.js App Router app.
-   - Add visible sign-in, sign-up, and user profile controls.
-   - Connect app UI to the authenticated user state.
-   - Store signed-in Clerk user data in a local SQLite database.
-   - Keep payment disabled for this step.
+## 明天課程中的位置
 
-3. Add payment
-   - This is the next training step.
-   - The authenticated user state and user database should already be available before checkout is added.
+建議教學順序：
 
-## Where the Clerk Setup Prompt Comes From
+1. 從 `01-tcm-platform-scaffold` 看原始平台。
+2. 進入這個分支，先完成 Clerk 登入與使用者資料庫。
+3. 登入完成後，再進入 `03-tcm-platform-stripe-payment` 加入 Stripe 付款。
 
-The first long Clerk setup prompt used in this training was provided directly by Clerk after signing in to the Clerk platform.
+## Clerk Setup Prompt 來源
 
-For the workshop, students do not need to write that full prompt manually. They can sign in to Clerk, create or select their Clerk application, and use the setup instructions or prompt that Clerk provides from the platform.
+第一段比較長的 Clerk setup prompt 由 Clerk 平台提供。學生登入 Clerk、建立或選擇 Clerk application 後，可以直接使用 Clerk 給的安裝指示或 prompt。
 
-## Two-Step Clerk Auth Teaching Flow
+Clerk 提供的提示通常會協助完成：
 
-### Step 1: Use Clerk's Own Setup Prompt
+- 安裝或更新 Clerk CLI。
+- 登入 Clerk。
+- 連接正確的 Clerk application。
+- 安裝 `@clerk/nextjs`。
+- 加入 Clerk 環境變數。
+- 加入 `ClerkProvider`、登入頁、註冊頁，以及 Next.js middleware/proxy 設定。
+- 執行 Clerk 檢查。
 
-Ask students to sign in to Clerk first, create or select their Clerk application, and use the setup prompt or instructions provided directly by Clerk.
+學生不需要自己手寫那一大段 Clerk setup prompt，可以直接從 Clerk 平台複製。
 
-That Clerk-provided prompt should handle the initial setup work:
+## 把登入接進課程平台
 
-- Install or update the Clerk CLI.
-- Run Clerk login.
-- Link the project to the correct Clerk application.
-- Install `@clerk/nextjs`.
-- Add Clerk environment variables.
-- Add `ClerkProvider`, sign-in route, sign-up route, and Next.js middleware/proxy files when supported.
-- Run Clerk setup verification.
-
-Do not ask students to manually rewrite that long setup prompt. They can copy it from the Clerk platform after logging in.
-
-### Step 2: Use This Prompt to Integrate Auth and User Data Into the App
-
-After Clerk's initial setup is complete, use this shorter prompt to connect login and user data to the app's actual course UI.
+Clerk 初始設定完成後，使用這段 prompt：
 
 ```text
 Clerk has already been set up in this project.
@@ -57,7 +46,9 @@ Please help me connect Clerk login to this app, and add a simple database to sav
 
 I want users to clearly see Sign in, Sign up, and their profile button after logging in.
 
-When a user logs in, please save their basic user information in the database so we can connect them to purchased courses later.
+When a user logs in, please save their basic user information in the database.
+
+Also make sure course data is stored in the database instead of only being hard-coded in the app.
 
 On the course page:
 - If the user is not logged in, ask them to sign in before purchasing or unlocking the video.
@@ -66,3 +57,7 @@ On the course page:
 
 Please finish the integration, test that it works, and tell me what changed.
 ```
+
+## 下一步
+
+下一個進度分支會加入 Stripe。請先確認這個分支的登入流程與資料庫寫入都正常，再開始付款整合。
