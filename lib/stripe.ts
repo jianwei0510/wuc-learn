@@ -26,14 +26,6 @@ export function getAppUrl() {
   return "http://localhost:3000";
 }
 
-export function getPaymentLinkEnvName(courseSlug: string) {
-  return `STRIPE_PAYMENT_LINK_${courseSlug.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}`;
-}
-
-export function getPaymentLinkForCourse(courseSlug: string) {
-  return process.env[getPaymentLinkEnvName(courseSlug)];
-}
-
 export function buildPaymentLinkUrl(input: {
   paymentLink: string;
   courseSlug: string;

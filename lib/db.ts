@@ -34,6 +34,7 @@ db.exec(`
     currency TEXT NOT NULL DEFAULT 'usd',
     cover_image TEXT NOT NULL,
     video_url TEXT NOT NULL,
+    stripe_payment_link_url TEXT,
     display_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -87,6 +88,14 @@ db.exec(`
     ON course_access(user_id);
 `);
 
+const courseColumns = db
+  .prepare("PRAGMA table_info(courses)")
+  .all() as { name: string }[];
+
+if (!courseColumns.some((column) => column.name === "stripe_payment_link_url")) {
+  db.exec("ALTER TABLE courses ADD COLUMN stripe_payment_link_url TEXT");
+}
+
 const now = new Date().toISOString();
 
 const courseSeed = [
@@ -101,6 +110,7 @@ const courseSeed = [
     priceCents: 4900,
     coverImage: "https://picsum.photos/seed/acupuncture/800/500",
     videoUrl: "https://www.youtube.com/watch?v=wuc-acu-101",
+    stripePaymentLinkUrl: null,
     displayOrder: 1,
   },
   {
@@ -114,6 +124,7 @@ const courseSeed = [
     priceCents: 6900,
     coverImage: "https://picsum.photos/seed/herbal/800/500",
     videoUrl: "https://www.youtube.com/watch?v=wuc-herb-101",
+    stripePaymentLinkUrl: null,
     displayOrder: 2,
   },
   {
@@ -127,6 +138,7 @@ const courseSeed = [
     priceCents: 5900,
     coverImage: "https://picsum.photos/seed/tuina/800/500",
     videoUrl: "https://www.youtube.com/watch?v=wuc-tuina-101",
+    stripePaymentLinkUrl: null,
     displayOrder: 3,
   },
   {
@@ -140,6 +152,7 @@ const courseSeed = [
     priceCents: 3900,
     coverImage: "https://picsum.photos/seed/qigong/800/500",
     videoUrl: "https://www.youtube.com/watch?v=wuc-qigong-101",
+    stripePaymentLinkUrl: null,
     displayOrder: 4,
   },
 ];
@@ -155,6 +168,7 @@ const seedCourse = db.prepare(`
     currency,
     cover_image,
     video_url,
+    stripe_payment_link_url,
     display_order,
     created_at,
     updated_at
@@ -169,6 +183,7 @@ const seedCourse = db.prepare(`
     'usd',
     @coverImage,
     @videoUrl,
+    @stripePaymentLinkUrl,
     @displayOrder,
     @now,
     @now
@@ -182,6 +197,7 @@ const seedCourse = db.prepare(`
     currency = excluded.currency,
     cover_image = excluded.cover_image,
     video_url = excluded.video_url,
+    stripe_payment_link_url = COALESCE(excluded.stripe_payment_link_url, stripe_payment_link_url),
     display_order = excluded.display_order,
     updated_at = excluded.updated_at
 `);

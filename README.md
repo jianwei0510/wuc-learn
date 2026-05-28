@@ -70,26 +70,16 @@ Please finish the integration, test that it works, and tell me what changed.
 
 登入與本機使用者資料庫都完成後，才進入 Stripe。
 
-這個專案支援兩種 Stripe 教學方式：
-
-1. Payment Links：最適合課堂示範，學生不需要使用 Stripe CLI。
-2. Stripe Checkout Sessions + webhooks：比較接近正式產品流程，可當作進階補充。
-
-明天培訓建議使用 **Payment Links + success redirect + server-side session verification**。這樣可以示範真實付款與課程解鎖，但不需要把 webhook 當成第一天必做內容。
+這個專案使用 **Payment Links + success redirect + server-side session verification**。這樣可以示範真實付款與課程解鎖，但不需要學生使用 Stripe CLI 或設定 webhook。
 
 需要的環境變數：
 
 ```env
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PAYMENT_LINK_ACUPUNCTURE_FUNDAMENTALS=https://buy.stripe.com/test_...
 ```
 
-選用的 webhook 環境變數：
-
-```env
-STRIPE_WEBHOOK_SECRET=whsec_...
-```
+Payment Link URL 不放在 `.env.local`，而是存在 SQLite 的 `courses.stripe_payment_link_url` 欄位。
 
 ### Stripe Dashboard 設定
 
@@ -121,17 +111,19 @@ STRIPE_SECRET_KEY=sk_test_...
 http://localhost:3000/checkout/complete?courseSlug=acupuncture-fundamentals&session_id={CHECKOUT_SESSION_ID}
 ```
 
-再把 Payment Link URL 放進 `.env.local`：
+再把學生自己建立的 Payment Link URL 放進課程資料庫。這個專案目前在 [lib/db.ts](/Users/wujianwei/WUCA/wuc-learn/lib/db.ts) 的 `courseSeed` 內設定每堂課的 `stripePaymentLinkUrl`。
 
-```env
-STRIPE_PAYMENT_LINK_ACUPUNCTURE_FUNDAMENTALS=https://buy.stripe.com/test_...
+```ts
+stripePaymentLinkUrl: "https://buy.stripe.com/test_..."
 ```
 
-目前第一堂課使用的測試 Payment Link：
+一開始所有課程都會先是 `null`，代表還沒有設定付款連結：
 
-```env
-STRIPE_PAYMENT_LINK_ACUPUNCTURE_FUNDAMENTALS=https://buy.stripe.com/test_28E3cv9EK1qU8JPa0X5Rm00
+```ts
+stripePaymentLinkUrl: null
 ```
+
+學生做到付款階段時，請讓他們用自己的 Stripe test mode 建立 Payment Link，再把自己的連結填到對應課程。不要把老師或其他人的 Payment Link 留在專案裡。
 
 ### Payment Link 流程
 
@@ -143,7 +135,7 @@ STRIPE_PAYMENT_LINK_ACUPUNCTURE_FUNDAMENTALS=https://buy.stripe.com/test_28E3cv9
 6. 驗證成功後，寫入 `course_purchases` 與 `course_access`。
 7. 使用者可以在 `/my-courses` 看到已購買課程。
 
-這比 webhook 流程更適合第一天課堂。限制是：使用者必須付款後回到 App，權限才會被解鎖。正式產品建議再加上 webhook。
+限制是：使用者必須付款後回到 App，權限才會被解鎖。這對課堂 demo 足夠，也能避免額外的 webhook 設定。
 
 ### 測試卡號
 
@@ -186,26 +178,8 @@ Requirements:
 - Only grant course access after verifying the payment status, amount, currency, course, and signed-in user.
 - Store successful purchases in the database.
 - Add a My courses page where users can see courses they already purchased.
-- Keep webhook support as an optional production upgrade, but do not make it required for the local training demo.
+- Store each course's Stripe Payment Link in the course database record, not in environment variables.
+- Do not hard-code the instructor's Payment Link. Leave course Payment Links empty until each student creates their own Stripe Payment Link.
 
 Please implement it, update README with the setup steps, and test that the app builds.
 ```
-
-## 選用：Webhook 進階流程
-
-如果要在本機測試 webhook，可以使用 Stripe CLI：
-
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-```
-
-把 CLI 顯示的 `whsec_...` 放進 `STRIPE_WEBHOOK_SECRET`，然後重新啟動開發伺服器。
-
-Webhook 流程：
-
-1. 已登入的使用者點擊 Purchase。
-2. Server 建立 Stripe Checkout Session。
-3. `course_purchases` 先寫入 pending 紀錄。
-4. Stripe 導向 Checkout。
-5. Stripe 發送 `checkout.session.completed` 到 `/api/stripe/webhook`。
-6. Webhook 將購買紀錄改成 paid，並寫入 `course_access`。

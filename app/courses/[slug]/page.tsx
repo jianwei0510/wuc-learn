@@ -31,7 +31,9 @@ export default async function CoursePage({
     "student";
   const isSignedIn = Boolean(user);
   const canAccessCourse = user ? hasCourseAccess(user.id, course.slug) : false;
-  const paymentsEnabled = Boolean(process.env.STRIPE_SECRET_KEY);
+  const paymentsEnabled = Boolean(
+    process.env.STRIPE_SECRET_KEY && course.stripePaymentLinkUrl,
+  );
 
   return (
     <article className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-start">
@@ -136,7 +138,7 @@ export default async function CoursePage({
               {canAccessCourse
                 ? "Payment verified. Lifetime access is stored in the database."
                 : isSignedIn && !paymentsEnabled
-                ? "Add Stripe environment variables to enable checkout."
+                ? "Add Stripe secret key and this course's Payment Link to enable checkout."
                 : checkout === "verified"
                 ? "Payment verified. Course access has been unlocked."
                 : checkout === "unverified"

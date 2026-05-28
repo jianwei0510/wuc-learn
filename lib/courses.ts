@@ -12,6 +12,7 @@ export type Course = {
   price: number;
   coverImage: string;
   videoUrl: string;
+  stripePaymentLinkUrl: string | null;
 };
 
 type CourseRow = {
@@ -24,6 +25,7 @@ type CourseRow = {
   price_cents: number;
   cover_image: string;
   video_url: string;
+  stripe_payment_link_url: string | null;
 };
 
 function mapCourseRow(row: CourseRow): Course {
@@ -37,6 +39,7 @@ function mapCourseRow(row: CourseRow): Course {
     price: row.price_cents / 100,
     coverImage: row.cover_image,
     videoUrl: row.video_url,
+    stripePaymentLinkUrl: row.stripe_payment_link_url,
   };
 }
 
@@ -53,7 +56,8 @@ export function getCourses() {
           instructor,
           price_cents,
           cover_image,
-          video_url
+          video_url,
+          stripe_payment_link_url
         FROM courses
         ORDER BY display_order ASC, id ASC
       `,
@@ -77,7 +81,8 @@ export function getCourseBySlug(slug: string): Course | undefined {
           instructor,
           price_cents,
           cover_image,
-          video_url
+          video_url,
+          stripe_payment_link_url
         FROM courses
         WHERE slug = ?
       `,
