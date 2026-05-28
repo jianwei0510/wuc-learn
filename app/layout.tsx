@@ -1,3 +1,10 @@
+import {
+  ClerkProvider,
+  Show,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
@@ -27,6 +34,23 @@ function Navbar() {
             </Link>
           </li>
         </ul>
+        <div className="flex items-center gap-3 text-sm">
+          <Show when="signed-out">
+            <SignInButton>
+              <button className="font-medium text-neutral-700 transition-colors hover:text-emerald-700">
+                Sign in
+              </button>
+            </SignInButton>
+            <SignUpButton>
+              <button className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white transition-colors hover:bg-emerald-800">
+                Sign up
+              </button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+        </div>
       </nav>
     </header>
   );
@@ -36,13 +60,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
-        <footer className="mt-20 border-t border-black/5">
-          <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-neutral-500">
-            © {new Date().getFullYear()} WUC Learn. For educational purposes only.
-          </div>
-        </footer>
+        <ClerkProvider>
+          <Navbar />
+          <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
+          <footer className="mt-20 border-t border-black/5">
+            <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-neutral-500">
+              © {new Date().getFullYear()} WUC Learn. For educational purposes only.
+            </div>
+          </footer>
+        </ClerkProvider>
       </body>
     </html>
   );

@@ -1,3 +1,5 @@
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,6 +18,14 @@ export default async function CoursePage({
   const { slug } = await params;
   const course = getCourseBySlug(slug);
   if (!course) notFound();
+  const { userId } = await auth();
+  const user = userId ? await currentUser() : null;
+  const displayName =
+    user?.firstName ||
+    user?.username ||
+    user?.primaryEmailAddress?.emailAddress ||
+    "student";
+  const isSignedIn = Boolean(userId);
 
   return (
     <article className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-start">
@@ -34,7 +44,7 @@ export default async function CoursePage({
         </p>
 
         <div className="mt-8">
-          <LockedVideo price={course.price} />
+          <LockedVideo isSignedIn={isSignedIn} price={course.price} />
         </div>
 
         <section className="mt-10">
@@ -55,16 +65,42 @@ export default async function CoursePage({
             />
           </div>
           <div className="p-5">
+            <div className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+              {isSignedIn ? (
+                <>
+                  Signed in as <span className="font-semibold">{displayName}</span>
+                </>
+              ) : (
+                "Sign in first so this course can be attached to your account."
+              )}
+            </div>
             <div className="text-3xl font-semibold">
               ${course.price}
               <span className="text-neutral-400 font-normal text-base"> USD</span>
             </div>
             <p className="mt-1 text-sm text-neutral-500">One-time purchase · Lifetime access</p>
-            <button className="mt-4 w-full rounded-full bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 hover:bg-emerald-800 transition-colors">
-              Purchase course
-            </button>
+            {isSignedIn ? (
+              <button className="mt-4 w-full rounded-full bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800">
+                Purchase course
+              </button>
+            ) : (
+              <div className="mt-4 grid gap-2">
+                <SignInButton mode="modal">
+                  <button className="w-full rounded-full bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800">
+                    Sign in to purchase
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="w-full rounded-full border border-emerald-700 px-4 py-2.5 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-50">
+                    Create account
+                  </button>
+                </SignUpButton>
+              </div>
+            )}
             <p className="mt-3 text-xs text-neutral-400 text-center">
-              Checkout is not enabled in this preview.
+              {isSignedIn
+                ? "Checkout is not enabled in this auth-only training step."
+                : "Payment will be connected after authentication is working."}
             </p>
           </div>
         </div>
