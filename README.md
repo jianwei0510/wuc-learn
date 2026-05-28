@@ -46,21 +46,23 @@ That Clerk-provided prompt should handle the initial setup work:
 
 Do not ask students to manually rewrite that long setup prompt. They can copy it from the Clerk platform after logging in.
 
-### Step 2: Use This Prompt to Integrate Auth Into the App
+### Step 2: Use This Prompt to Integrate Auth and User Data Into the App
 
-After Clerk's initial setup is complete, use this shorter prompt to connect authentication state to the app's actual course UI.
+After Clerk's initial setup is complete, use this shorter prompt to connect login and user data to the app's actual course UI.
 
 ```text
 Clerk has already been set up in this project.
 
-Please help me connect Clerk login to this app.
+Please help me connect Clerk login to this app, and add a simple database to save user information.
 
 I want users to clearly see Sign in, Sign up, and their profile button after logging in.
+
+When a user logs in, please save their basic user information in the database so we can connect them to purchased courses later.
 
 On the course page:
 - If the user is not logged in, ask them to sign in before purchasing or unlocking the video.
 - If the user is logged in, show that they are signed in and let them see the purchase button.
-- Do not add payment yet. This step is only for user login.
+- Do not add payment yet. This step is only for user login and saving user data.
 
 Please finish the integration, test that it works, and tell me what changed.
 ```
