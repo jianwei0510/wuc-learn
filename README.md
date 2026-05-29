@@ -26,20 +26,37 @@
 
 這個分支的重點是讓學生先看到一個乾淨的課程平台，並知道課程資料已經由資料庫提供。
 
-## 下一步 Prompt
+## 下一步：進入 Clerk 登入
 
-進入 Clerk 階段時，可以使用這段 prompt：
+進入 Clerk 階段時分兩步，和總 README 的流程一致。
+
+### 第一步：先做 Clerk 平台設定
+
+請學生先登入 Clerk，建立或選擇自己的 Clerk application，然後使用 Clerk 平台提供的 setup prompt 或安裝指示（會協助安裝 `@clerk/nextjs`、加入環境變數、`ClerkProvider`、登入／註冊頁，以及 Next.js middleware/proxy 設定）。學生不需要自己手寫那一大段 setup prompt，可以直接從 Clerk 平台複製。
+
+### 第二步：把登入接進課程平台
+
+Clerk 初始設定完成後，使用這段 prompt：
 
 ```text
-Please add Clerk login to this course platform.
+Clerk has already been set up in this project.
 
-Users should be able to sign in, sign up, and see their profile button after logging in.
+Please help me connect Clerk login to this app, and add a simple database to save user information.
 
-When a user logs in, save their basic user information in the local database.
+I want users to clearly see Sign in, Sign up, and their profile button after logging in.
 
-Keep the existing course data in the database.
+When a user logs in, please save their basic user information in the database.
 
-Do not add payment yet. This step is only for user login and saving user data.
+Also make sure course data is stored in the database instead of only being hard-coded in the app.
 
-Please test that the app builds and tell me what changed.
+Please prepare the database structure we will need later for payment:
+- A table for Stripe checkout purchase records.
+- A table that connects users to courses they have purchased.
+
+On the course page:
+- If the user is not logged in, ask them to sign in before purchasing or unlocking the video.
+- If the user is logged in, show that they are signed in and let them see the purchase button.
+- Do not add payment yet. This step is only for user login and saving user data.
+
+Please finish the integration, test that it works, and tell me what changed.
 ```
