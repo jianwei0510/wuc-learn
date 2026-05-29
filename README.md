@@ -125,6 +125,8 @@ stripePaymentLinkUrl: null
 
 學生做到付款階段時，請讓他們用自己的 Stripe test mode 建立 Payment Link，再把自己的連結填到對應課程。不要把老師或其他人的 Payment Link 留在專案裡。
 
+> 注意：改完 `lib/db.ts` 的 `courseSeed`（包含填入 Payment Link）後，要**重啟 dev server** 才會生效。`lib/courses.ts` 在模組載入時就用 `getCourses()` 把課程讀出來快取，所以只存檔不重啟看不到更新。
+
 ### Payment Link 流程
 
 1. 已登入的使用者點擊 Purchase。
