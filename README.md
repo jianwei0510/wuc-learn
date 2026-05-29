@@ -99,7 +99,41 @@ STRIPE_SECRET_KEY=sk_test_...
 
 ### Payment Link 設定
 
-在 Stripe Dashboard 建立 Payment Link：
+每堂課需要一個自己的 Stripe Payment Link。可以**請 Codex 自動建立（建議）**，或在 **Stripe Dashboard 手動建立（備案）**。
+
+不論哪種方式，有三個條件一定要對，否則會出現「付款成功但課程沒解鎖」的無聲失敗：
+
+1. **付款後 redirect** 必須是下面這個 URL，每堂課帶自己的 `courseSlug`，而且 `{CHECKOUT_SESSION_ID}` 要原樣保留（由 Stripe 在付款後自動代換）：
+
+   ```text
+   http://localhost:3000/checkout/complete?courseSlug=acupuncture-fundamentals&session_id={CHECKOUT_SESSION_ID}
+   ```
+
+2. **金額與幣別**要對齊 `courseSeed` 的 `priceCents`（例如 `4900` → `$49.00 USD`）。驗證程式會比對金額與 `usd`，不符會被擋下。
+3. 把連結寫進 `lib/db.ts` 後，要**重啟 dev server** 才會生效（課程在模組載入時就被快取）。
+
+#### 方式 A：請 Codex 自動建立（建議）
+
+Stripe 帳號連上 Codex 後，使用這段 prompt（請確認在 **test mode**）：
+
+```text
+Use my connected Stripe account in test mode only.
+
+For each course in lib/db.ts courseSeed whose stripePaymentLinkUrl is still null:
+- Create a Stripe product named after the course title.
+- Create a one-time price in USD that exactly matches the course's priceCents (for example 4900 means $49.00 USD).
+- Create a Stripe Payment Link for that price.
+- Set the Payment Link's after-payment behavior to redirect to this exact URL, keeping {CHECKOUT_SESSION_ID} as a literal template token and using that course's own slug:
+  http://localhost:3000/checkout/complete?courseSlug=<COURSE_SLUG>&session_id={CHECKOUT_SESSION_ID}
+- Write the resulting Payment Link URL back into that course's stripePaymentLinkUrl in lib/db.ts.
+
+Do not use live mode. Do not touch courses that already have a Payment Link.
+After updating lib/db.ts, tell me to restart the dev server so the new links take effect.
+```
+
+#### 方式 B：手動在 Stripe Dashboard 建立（備案）
+
+如果現場 Stripe 連線有問題，改用手動：
 
 1. 進入 **Payment Links**。
 2. 為課程建立 product。
