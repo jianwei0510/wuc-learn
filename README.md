@@ -50,6 +50,10 @@ When a user logs in, please save their basic user information in the database.
 
 Also make sure course data is stored in the database instead of only being hard-coded in the app.
 
+Please prepare the database structure we will need later for payment:
+- A table for Stripe checkout purchase records.
+- A table that connects users to courses they have purchased.
+
 On the course page:
 - If the user is not logged in, ask them to sign in before purchasing or unlocking the video.
 - If the user is logged in, show that they are signed in and let them see the purchase button.

@@ -19,7 +19,12 @@ if (process.env.NODE_ENV !== "production") {
   globalForDb.db = db;
 }
 
-db.pragma("journal_mode = WAL");
+// Wait (up to 5s) for the lock instead of throwing SQLITE_BUSY. `next build`
+// runs several workers that all import this file and seed the database at once,
+// so a fresh database would otherwise race. busy_timeout lets the writers queue
+// up. (We keep the default rollback journal — switching a brand-new file to WAL
+// concurrently is itself a race that busy_timeout does not cover.)
+db.pragma("busy_timeout = 5000");
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS courses (
@@ -64,7 +69,8 @@ const courseSeed = [
     instructor: "Dr. Mei-Lin Chen",
     priceCents: 4900,
     coverImage: "https://picsum.photos/seed/acupuncture/800/500",
-    videoUrl: "https://www.youtube.com/watch?v=wuc-acu-101",
+    videoUrl:
+      "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     displayOrder: 1,
   },
   {
@@ -77,7 +83,8 @@ const courseSeed = [
     instructor: "Master Hong Wei",
     priceCents: 6900,
     coverImage: "https://picsum.photos/seed/herbal/800/500",
-    videoUrl: "https://www.youtube.com/watch?v=wuc-herb-101",
+    videoUrl:
+      "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     displayOrder: 2,
   },
   {
@@ -90,7 +97,8 @@ const courseSeed = [
     instructor: "Dr. James Lau",
     priceCents: 5900,
     coverImage: "https://picsum.photos/seed/tuina/800/500",
-    videoUrl: "https://www.youtube.com/watch?v=wuc-tuina-101",
+    videoUrl:
+      "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     displayOrder: 3,
   },
   {
@@ -103,7 +111,8 @@ const courseSeed = [
     instructor: "Sifu Anna Park",
     priceCents: 3900,
     coverImage: "https://picsum.photos/seed/qigong/800/500",
-    videoUrl: "https://www.youtube.com/watch?v=wuc-qigong-101",
+    videoUrl:
+      "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
     displayOrder: 4,
   },
 ];
